@@ -73,6 +73,48 @@ def update_product(product_id,name,description,price,stock,window,refresh_callba
     except Exception as e:
         messagebox.showerror("Error", f"API Error: {e}")
 
+def delete_product(product_id,window,refresh_callback=None):
+    result=messagebox.askyesno("Confim deletion","Are you sure you want to delete this product?")
+    if not result:
+        return
+
+    try:
+        response = requests.delete(f"{API_URL}/delete_product/{product_id}/")
+        if response.status_code == 200:
+            messagebox.showinfo("Success", "Product deleted successfully")
+            window.destroy()
+            if refresh_callback:
+                refresh_callback()
+        else:
+            messagebox.showerror("Error", f"API Error: {response.text}")
+    except Exception as e:
+        messagebox.showerror("Error", f"API Error: {e}")
+
+def find_products(search_term):
+    try:
+        response=requests.get(f'{API_URL}/find_products/{search_term}/')
+        if response.status_code == 200:
+            return response.json()
+        else:
+            messagebox.showerror("Error", f"API Error: {response.text}")
+            return []
+    except Exception as e:
+        messagebox.showerror("Error", f"API Error: {e}")
+        return []
+
+def find_products_by_field(field,search_term):
+    try:
+        response=requests.get(f'{API_URL}/find_product_by_field/{field}/{search_term}/')
+        if response.status_code == 200:
+            return response.json()
+        else:
+            messagebox.showerror("Error", f"API Error: {response.text}")
+            return []
+    except Exception as e:
+        messagebox.showerror("Error", f"API Error: {e}")
+        return []
+
+
 
 #............... FRONT END VISUALIZATION........................
 
@@ -250,7 +292,6 @@ def open_view_products():
         # Back button
     ttk.Button(window, text="Back", command=window.destroy).pack(pady=10)
 
-
 def open_edit_product(product_data,refresh_callback=None):
     window = tk.Toplevel(root)
     window.title("Edit Product")
@@ -298,6 +339,22 @@ def open_edit_product(product_data,refresh_callback=None):
     ttk.Button(button_frame, text="Cancel",
                command=window.destroy).pack(side="left", padx=10)
 
+    # Delete button (separate with different color/style)
+    delete_button_frame = ttk.Frame(window)
+    delete_button_frame.pack(pady=10)
+
+    # Create a style for the delete button to make it red
+    style = ttk.Style()
+    style.configure("Delete.TButton", foreground="red")
+
+    ttk.Button(delete_button_frame, text="Delete Product",
+               style="Delete.TButton",
+               command=lambda: delete_product(
+                   product_data['product_id'],
+                   window,
+                   refresh_callback
+               )).pack()
+
 def on_double_click(event, tree, refresh_callback=None):
     """Handle double-click on treeview item"""
     item = tree.selection()[0] if tree.selection() else None
@@ -312,6 +369,201 @@ def on_double_click(event, tree, refresh_callback=None):
         }
         open_edit_product(product_data, refresh_callback)
 
+#NEED TO STUDY IT AND LEARN IT
+def open_search_window():
+    window = tk.Toplevel(root)
+    window.title("Search Products")
+    window.geometry("800x500")
+
+    style = ttk.Style()
+    style.configure("Search.TFrame", background="#f0f0f0")
+
+    # --- Main Container Frame ---
+    main_frame = ttk.Frame(window, padding="20")
+    main_frame.pack(fill="both", expand=True)
+
+    # --- Title ---
+    ttk.Label(main_frame, text="Search Products",
+              font=("Arial", 16, "bold")).pack(pady=(0, 20))
+
+    # --- Search Controls Frame ---
+    control_frame = ttk.LabelFrame(main_frame, text="Search Options", padding="15")
+    control_frame.pack(fill="x", pady=(0, 15))
+
+    # --- Search in All Fields (Row 1) ---
+    all_search_frame = ttk.Frame(control_frame)
+    all_search_frame.pack(fill="x", pady=8)
+
+    ttk.Label(all_search_frame, text="Search All Fields:",
+              font=("Arial", 10, "bold")).grid(row=0, column=0, padx=(0, 15), sticky="w")
+
+    all_search_entry = ttk.Entry(all_search_frame, width=40, font=("Arial", 10))
+    all_search_entry.grid(row=0, column=1, padx=(0, 15))
+
+    ttk.Button(all_search_frame, text="Search All",
+               command=lambda: perform_search_all(),
+               width=12).grid(row=0, column=2)
+
+    # --- Search by Specific Field (Row 2) ---
+    field_search_frame = ttk.Frame(control_frame)
+    field_search_frame.pack(fill="x", pady=8)
+
+    ttk.Label(field_search_frame, text="Search by Field:",
+              font=("Arial", 10, "bold")).grid(row=0, column=0, padx=(0, 15), sticky="w")
+
+    field_combobox = ttk.Combobox(field_search_frame,
+                                  values=["product_id", "product_name", "product_description", "product_price",
+                                          "product_stock"],
+                                  state="readonly",
+                                  width=15,
+                                  font=("Arial", 10))
+    field_combobox.grid(row=0, column=1, padx=(0, 15))
+    field_combobox.set("product_name")  # Default field
+
+    field_search_entry = ttk.Entry(field_search_frame, width=40, font=("Arial", 10))
+    field_search_entry.grid(row=0, column=2, padx=(0, 15))
+
+    ttk.Button(field_search_frame, text="Search Field",
+               command=lambda: perform_search_field(),
+               width=12).grid(row=0, column=3)
+
+    # --- Quick Action Buttons (Row 3) ---
+    action_frame = ttk.Frame(control_frame)
+    action_frame.pack(fill="x", pady=(10, 0))
+
+    ttk.Button(action_frame, text="Show All Products",
+               command=lambda: [all_search_entry.delete(0, tk.END),
+                                field_search_entry.delete(0, tk.END),
+                                load_all_products()],
+               width=18).pack(side="left", padx=(0, 10))
+
+    ttk.Button(action_frame, text="Clear All",
+               command=lambda: [all_search_entry.delete(0, tk.END),
+                                field_search_entry.delete(0, tk.END)],
+               width=12).pack(side="left")
+
+    # --- Results Frame ---
+    results_label_frame = ttk.LabelFrame(main_frame, text="Search Results", padding="10")
+    results_label_frame.pack(fill="both", expand=True)
+
+    columns = ("ID", "Name", "Description", "Price", "Stock")
+    tree = ttk.Treeview(results_label_frame, columns=columns, show="headings", height=12)
+
+    tree.column("ID", width=60, anchor="center")
+    tree.column("Name", width=150, anchor="center")
+    tree.column("Description", width=200, anchor="center")
+    tree.column("Price", width=100, anchor="center")
+    tree.column("Stock", width=80, anchor="center")
+
+    # Configure headings
+    for col in columns:
+        tree.heading(col, text=col, anchor="center")
+
+    # Add scrollbar
+    scrollbar = ttk.Scrollbar(results_label_frame, orient="vertical", command=tree.yview)
+    tree.configure(yscrollcommand=scrollbar.set)
+
+    # Pack tree and scrollbar
+    tree.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # Configure tag for negative stock
+    tree.tag_configure('negative', foreground='red')
+
+    # --- Status Bar ---
+    status_frame = ttk.Frame(main_frame)
+    status_frame.pack(fill="x", pady=(10, 0))
+
+    status_label = ttk.Label(status_frame, text="Ready to search...",
+                             font=("Arial", 9), foreground="gray")
+    status_label.pack(side="left")
+
+    # --- Helper: Populate Tree with Data ---
+    def populate_tree(products, search_type=""):
+        # Clear old data
+        for item in tree.get_children():
+            tree.delete(item)
+
+        if not products:
+            status_label.config(text="No products found for your search.")
+            messagebox.showinfo("No Results", "No products found for your search.")
+            return
+
+        # Populate with products
+        for product in products:
+            stock_value = product.get('product_stock', 0)
+            tags = ('negative',) if stock_value < 0 else ()
+
+            tree.insert("", "end", values=(
+                product.get('product_id', 'N/A'),
+                product.get('product_name', 'N/A'),
+                product.get('product_description', 'N/A'),
+                product.get('product_price', 'N/A'),
+                stock_value
+            ), tags=tags)
+
+        # Update status
+        status_label.config(text=f"Found {len(products)} products" +
+                                 (f" ({search_type})" if search_type else ""))
+
+    # --- Search Functions ---
+    def perform_search_all():
+        search_term = all_search_entry.get().strip()
+        if not search_term:
+            messagebox.showwarning("Input Error", "Please enter a search term.")
+            return
+        status_label.config(text="Searching...")
+        window.update()
+        products = find_products(search_term)
+        populate_tree(products, "all fields search")
+
+    def perform_search_field():
+        field = field_combobox.get()
+        search_term = field_search_entry.get().strip()
+        if not search_term:
+            messagebox.showwarning("Input Error", "Please enter a search term for the selected field.")
+            return
+        status_label.config(text="Searching...")
+        window.update()
+        products = find_products_by_field(field, search_term)
+        populate_tree(products, f"{field} search")
+
+    def load_all_products():
+        status_label.config(text="Loading all products...")
+        window.update()
+        products = fetch_products()
+        populate_tree(products, "all products")
+        status_label.config(text=f"Loaded {len(products)} products")
+
+    # --- Double Click to Edit Product ---
+    def on_tree_double_click(event):
+        item = tree.selection()
+        if not item:
+            return
+        values = tree.item(item, 'values')
+        product_data = {
+            'product_id': values[0],
+            'product_name': values[1],
+            'product_description': values[2],
+            'product_price': float(values[3]),
+            'product_stock': int(values[4])
+        }
+        open_edit_product(product_data, lambda: load_all_products())
+
+    tree.bind("<Double-1>", on_tree_double_click)
+
+    # --- Bind Enter key to search ---
+    def on_enter_key(event, search_function):
+        search_function()
+
+    all_search_entry.bind("<Return>", lambda e: on_enter_key(e, perform_search_all))
+    field_search_entry.bind("<Return>", lambda e: on_enter_key(e, perform_search_field))
+
+    # Load all products initially
+    load_all_products()
+
+    # Set focus to first search field
+    all_search_entry.focus()
 
 #...........MAIN MENU........................
 
@@ -327,6 +579,7 @@ style.configure("TButton", font=("Arial", 12), padding=6)
 ttk.Label(root, text="Storage CRUDE App", font=("Arial", 18, "bold")).pack(pady=20)
 ttk.Button(root, text="Create Product", width=25, command=open_create_product).pack(pady=5)
 ttk.Button(root, text="View Products", width=25, command=open_view_products).pack(pady=5)
+ttk.Button(root, text="Search Products", width=25, command=open_search_window).pack(pady=5)
 
 ttk.Button(root, text="Exit", width=25, command=root.destroy).pack(pady=20)
 

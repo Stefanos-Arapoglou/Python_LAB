@@ -24,6 +24,7 @@ class Product(BaseModel):
 
 
 #.......FUNCTIONS TO HANDLE DATABASE...............
+
 def get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT):
     try:
         conn=psycopg2.connect(
@@ -92,6 +93,69 @@ def update_product_in_db(product_id,product: Product):
     conn.commit()
     cursor.close()
 
+def delete_product_in_db(productd_id):
+    conn = get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+    conn.cursor().execute("""
+            DELETE FROM products where product_id=%s
+    """, (productd_id))
+    conn.commit()
+    conn.close()
+
+def search_all_fields(search_term):
+    conn = get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+    cursor = conn.cursor()
+    search_pattern = f'%{search_term}%'
+    cursor.execute("""
+        SELECT * FROM products WHERE
+            product_id::TEXT ILIKE %s OR
+            product_name ILIKE %s OR
+            product_description ILIKE %s OR
+            product_price::TEXT ILIKE %s OR
+            product_stock::TEXT ILIKE %s;
+    """, (search_pattern, search_pattern, search_pattern, search_pattern, search_pattern))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [
+        {
+            "product_id": r[0],
+            "product_name": r[1],
+            "product_description": r[2],
+            "product_price": r[3],
+            "product_stock": r[4]
+        }
+        for r in rows
+    ]
+
+def search_product_by_field(search_field, search_term):
+    conn = get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+    cursor = conn.cursor()
+
+    # Validate the search_field to prevent SQL injection
+    valid_fields = ['product_id', 'product_name', 'product_description', 'product_price', 'product_stock']
+    if search_field not in valid_fields:
+        raise ValueError(f"Invalid search field: {search_field}")
+
+    # Use string formatting for the column name, parameter for the value
+    query = f"""
+        SELECT * FROM products WHERE {search_field}::TEXT ILIKE %s;
+    """
+    search_term_pattern = f'%{search_term}%'
+
+    cursor.execute(query, (search_term_pattern,))
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [
+        {
+            "product_id": r[0],
+            "product_name": r[1],
+            "product_description": r[2],
+            "product_price": r[3],
+            "product_stock": r[4]
+        }
+        for r in rows
+    ]
 
 #............APIS........................
 @app.post("/create_product/")
@@ -108,3 +172,18 @@ def get_all_products():
 def update_product(product_id,product: Product):
     update_product_in_db(product_id,product)
     return {"message": "Product updated successfully"}
+
+@app.delete("/delete_product/{product_id}")
+def delete_product(product_id):
+    delete_product_in_db(product_id)
+    return {"message":"Product deleted successfully"}
+
+@app.get("/find_products/{search_term}")
+def search_products(search_term: str):
+    products = search_all_fields(search_term)
+    return products
+
+@app.get("/find_product_by_field/{search_field}/{search_term}")
+def serach_products_by_field(search_field,search_term):
+    products = search_product_by_field(search_field,search_term)
+    return products
