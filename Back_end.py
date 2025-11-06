@@ -157,6 +157,66 @@ def search_product_by_field(search_field, search_term):
         for r in rows
     ]
 
+def stats_calculation_in_db():
+    conn = get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT product_id, product_name, product_description, product_price, product_stock FROM products;""")
+    rows = cursor.fetchall()
+    cursor.close()
+
+    #... variables that we will need for our stats:....
+    product_count=0
+    price_sum=0
+    stock_sum=0
+    value_sum=0
+    current_highest_price=0
+    highest_price_id=""
+    current_highest_stock=0
+    highest_stock_id=""
+    available_products=0
+    out_of_stock_products=0
+
+    #.... getting info from our database...
+    for row in rows:
+        product_id = row[0]
+        product_name = row[1]
+        product_description = row[2]
+        product_price = row[3]
+        product_stock = row[4]
+        product_count=product_count+1
+        price_sum+=float(product_price)
+        stock_sum+=float(product_stock)
+        value_sum+=float(product_price*product_stock)
+        if product_price>current_highest_price:
+            current_highest_price=product_price
+            highest_price_id=product_id
+        if product_stock>current_highest_stock:
+            current_highest_stock=product_stock
+            highest_stock_id=product_id
+        if product_stock>0:
+            available_products=available_products+1
+        else:
+            out_of_stock_products=out_of_stock_products+1
+
+
+    #... Calculating stats....
+    average_price=price_sum/product_count
+    average_stock=stock_sum/product_count
+    stats={
+        "product_count": product_count,
+        "average_price": average_price,
+        "average_stock": average_stock,
+        "highest_price_id": highest_price_id,
+        "highest_price": current_highest_price,
+        "highest_stock_id": highest_stock_id,
+        "highest_stock": current_highest_stock,
+        "value_sum": value_sum,
+        "available_products": available_products,
+        "out_of_stock_products": out_of_stock_products
+    }
+    return stats
+
 
 #............APIS........................
 @app.post("/create_product/")
@@ -188,3 +248,8 @@ def search_products(search_term: str):
 def serach_products_by_field(search_field,search_term):
     products = search_product_by_field(search_field,search_term)
     return products
+
+@app.get("/get_stats/")
+def get_stats():
+    stats = stats_calculation_in_db()
+    return stats

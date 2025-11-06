@@ -197,6 +197,17 @@ def restock_products(restocked_products, window=None, refresh_callback=None):
     if refresh_callback:
         refresh_callback()
 
+def get_stats():
+    try:
+        response = requests.get(f"{API_URL}/get_stats/")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            messagebox.showerror("Error", f"Failed to fetch products: {response.text}")
+            return []
+    except Exception as e:
+        messagebox.showerror("Error", f"API Error: {e}")
+        return []
 
 
 #............... FRONT END VISUALIZATION........................
@@ -721,12 +732,76 @@ def open_restock_window():
     ttk.Button(button_frame, text="Back",
                command=window.destroy).pack(side="left", padx=10)
 
+def open_stats_window():
+    window = tk.Toplevel(root)
+    window.title("Statistics Overview")
+    window.geometry("400x500")
+    window.resizable(False, False)
+
+    ttk.Label(window, text="📊 Product Statistics", font=("Arial", 16, "bold")).pack(pady=15)
+
+    stats = get_stats()
+    if not stats:
+        ttk.Label(window, text="No statistics available", font=("Arial", 12)).pack(pady=20)
+        return
+
+    # Fetch all products to resolve product_id → product_name
+    products = fetch_products()
+    product_map = {str(p["product_id"]): p for p in products}
+
+    # Build readable labels
+    stat_labels = {
+        "product_count": "Total Products",
+        "average_price": "Average Price",
+        "average_stock": "Average Stock",
+        "highest_price_id": "Product with Highest Price",
+        "highest_price": "Highest Price",
+        "highest_stock_id": "Product with Highest Stock",
+        "highest_stock": "Highest Stock",
+        "value_sum": "Total Inventory Value",
+        "available_products": "Available Products",
+        "out_of_stock_products": "Out of Stock Products",
+    }
+
+    # Frame for all stat rows
+    stats_frame = ttk.Frame(window)
+    stats_frame.pack(padx=20, pady=10, fill="x")
+
+    product_links = {}  # Keep references for clickable product labels
+
+    for i, (key, label_text) in enumerate(stat_labels.items()):
+        ttk.Label(stats_frame, text=label_text + ":", font=("Arial", 11, "bold")).grid(row=i, column=0, sticky="w", pady=5)
+
+        value = stats.get(key, "N/A")
+
+        # Handle product ID fields
+        if key in ("highest_price_id", "highest_stock_id"):
+            product = product_map.get(str(value))
+            if product:
+                product_name = product["product_name"]
+                label = tk.Label(stats_frame, text=f"{product_name} (ID: {value})",
+                                 font=("Arial", 11), foreground="blue", cursor="hand2")
+                label.grid(row=i, column=1, sticky="w", pady=5)
+                # Store and bind double-click
+                product_links[label] = product
+                label.bind("<Double-1>", lambda e, p=product: open_edit_product(p))
+            else:
+                ttk.Label(stats_frame, text=f"Unknown (ID: {value})", font=("Arial", 11)).grid(row=i, column=1, sticky="w", pady=5)
+
+        else:
+            # Format numeric values nicely
+            if isinstance(value, float):
+                value = round(value, 2)
+            ttk.Label(stats_frame, text=value, font=("Arial", 11)).grid(row=i, column=1, sticky="w", pady=5)
+
+    ttk.Button(window, text="Close", command=window.destroy).pack(pady=20)
+
 
 
 #...........MAIN MENU........................
 
 root = tk.Tk()
-root.geometry("400x400")
+root.geometry("400x480")
 root.title("CRUD STORAGE APP")
 root.resizable(False, False)
 
@@ -739,7 +814,8 @@ ttk.Button(root, text="Create Product", width=25, command=open_create_product).p
 ttk.Button(root, text="View Products", width=25, command=open_view_products).pack(pady=5)
 ttk.Button(root, text="Search Products", width=25, command=open_search_window).pack(pady=5)
 ttk.Button(root, text="Restock Products", width=25, command=open_restock_window).pack(pady=5)
+ttk.Button(root, text="View Statistics", width=25, command=open_stats_window).pack(pady=5)
 
-ttk.Button(root, text="Exit", width=25, command=root.destroy).pack(pady=20)
+ttk.Button(root, text="Exit", width=25, command=root.destroy).pack(pady=50)
 
 root.mainloop()

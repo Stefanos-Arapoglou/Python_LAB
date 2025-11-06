@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bddef2d8-6060-4765-9cbd-10c87ea3fa61" name="Changes" comment="c4 taking shape!">
+    <list default="true" id="bddef2d8-6060-4765-9cbd-10c87ea3fa61" name="Changes" comment="c5 added restocking feature">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_end.py" beforeDir="false" afterPath="$PROJECT_DIR$/Back_end.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Front_end.py" beforeDir="false" afterPath="$PROJECT_DIR$/Front_end.py" afterDir="false" />
@@ -174,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762097696346</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="c5 added restocking feature">
+      <option name="closed" value="true" />
+      <created>1762458035724</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1762458035724</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,7 +204,8 @@
     <MESSAGE value="c2 taking shape!" />
     <MESSAGE value="c3 taking shape!" />
     <MESSAGE value="c4 taking shape!" />
-    <option name="LAST_COMMIT_MESSAGE" value="c4 taking shape!" />
+    <MESSAGE value="c5 added restocking feature" />
+    <option name="LAST_COMMIT_MESSAGE" value="c5 added restocking feature" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Python_LAB$Font_end.coverage" NAME="Front_end Coverage Results" MODIFIED="1762012707013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
