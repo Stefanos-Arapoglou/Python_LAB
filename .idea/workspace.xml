@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bddef2d8-6060-4765-9cbd-10c87ea3fa61" name="Changes" comment="c3 taking shape!">
+    <list default="true" id="bddef2d8-6060-4765-9cbd-10c87ea3fa61" name="Changes" comment="c4 taking shape!">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Back_end.py" beforeDir="false" afterPath="$PROJECT_DIR$/Back_end.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Front_end.py" beforeDir="false" afterPath="$PROJECT_DIR$/Front_end.py" afterDir="false" />
@@ -125,7 +125,6 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-PY-252.26830.99" />
         <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
       </set>
     </attachedChunks>
@@ -139,7 +138,9 @@
       <updated>1762009664929</updated>
       <workItem from="1762009665995" duration="4982000" />
       <workItem from="1762073559341" duration="10567000" />
-      <workItem from="1762091428600" duration="6224000" />
+      <workItem from="1762091428600" duration="7230000" />
+      <workItem from="1762187381081" duration="3172000" />
+      <workItem from="1762449739652" duration="9000" />
     </task>
     <task id="LOCAL-00001" summary="first test commit">
       <option name="closed" value="true" />
@@ -165,7 +166,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762083884389</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="c4 taking shape!">
+      <option name="closed" value="true" />
+      <created>1762097696346</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762097696346</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -186,10 +195,11 @@
     <MESSAGE value="first test commit" />
     <MESSAGE value="c2 taking shape!" />
     <MESSAGE value="c3 taking shape!" />
-    <option name="LAST_COMMIT_MESSAGE" value="c3 taking shape!" />
+    <MESSAGE value="c4 taking shape!" />
+    <option name="LAST_COMMIT_MESSAGE" value="c4 taking shape!" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Python_LAB$Font_end.coverage" NAME="Front_end Coverage Results" MODIFIED="1762012707013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Python_LAB$Front_end__1_.coverage" NAME="Front_end (1) Coverage Results" MODIFIED="1762097681867" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Python_LAB$Front_end__1_.coverage" NAME="Front_end (1) Coverage Results" MODIFIED="1762190009915" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

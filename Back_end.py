@@ -157,6 +157,7 @@ def search_product_by_field(search_field, search_term):
         for r in rows
     ]
 
+
 #............APIS........................
 @app.post("/create_product/")
 def create_product(product: Product):
