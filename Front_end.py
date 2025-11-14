@@ -6,6 +6,8 @@ API_URL = "http://127.0.0.1:8000"
 
 
 #.................CLASSES AND HELPER SCRIPTS......................
+
+#the EditableTreeview is used in the restocking tab. It allows double clicking on field to edit
 class EditableTreeview(ttk.Treeview):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -21,8 +23,8 @@ class EditableTreeview(ttk.Treeview):
         column = self.identify_column(event.x)
         col_index = int(column.replace('#', '')) - 1
 
-        # Only allow editing the Stock column
-        if self["columns"][col_index].lower() != "stock":
+        # Only allow editing the Addition column
+        if self["columns"][col_index].lower() != "additions":
             return
 
         x, y, width, height = self.bbox(row_id, column)
@@ -57,7 +59,7 @@ def create_product(name,description,price,stock):
     product_price=price.get()
     product_stock=stock.get()
 
-    if not product_name or not product_description or not product_price or not product_stock:
+    if not product_name or not product_price or not product_stock:
         messagebox.showwarning("Input Error", "Please fill all necessary fields.")
         return
 
@@ -95,7 +97,7 @@ def update_product(product_id,name,description,price,stock,window,refresh_callba
     product_price=price.get()
     product_stock=stock.get()
 
-    if not product_name or not product_description or not product_price or not product_stock:
+    if not product_name or not product_price or not product_stock:
         messagebox.showerror("Input Error","Please fill all necessary fields.")
         return
 
@@ -118,10 +120,9 @@ def update_product(product_id,name,description,price,stock,window,refresh_callba
         messagebox.showerror("Error", f"API Error: {e}")
 
 def delete_product(product_id,window,refresh_callback=None):
-    result=messagebox.askyesno("Confim deletion","Are you sure you want to delete this product?")
+    result=messagebox.askyesno("Confirm deletion","Are you sure you want to delete this product?")
     if not result:
         return
-
     try:
         response = requests.delete(f"{API_URL}/delete_product/{product_id}/")
         if response.status_code == 200:
@@ -183,7 +184,7 @@ def restock_products(restocked_products, window=None, refresh_callback=None):
             response = requests.put(f"{API_URL}/update_product/{product_id}/", json=product_data)
 
             if response.status_code == 200:
-                print(f"✅ Product {product_name} updated successfully.")
+                print(f"Product {product_name} updated successfully.")
             else:
                 messagebox.showerror("Error", f"API Error ({response.status_code}): {response.text}")
 
@@ -216,7 +217,7 @@ def open_create_product():
     window = tk.Toplevel(root)
     ttk.Label(window, text="Create a new product", font=("Arial", 14, "bold")).pack(pady=10)
 
-    ttk.Label(window, text="Product Name:").pack()
+    ttk.Label(window, text="*Product Name:").pack()
     product_name_entry = ttk.Entry(window, width=30)
     product_name_entry.pack()
 
@@ -224,16 +225,23 @@ def open_create_product():
     product_description_entry = ttk.Entry(window, width=30)
     product_description_entry.pack()
 
-    ttk.Label(window, text="Product price:").pack()
+    ttk.Label(window, text="*Product price:").pack()
     product_price_entry = ttk.Entry(window, width=30)
     product_price_entry.pack()
 
-    ttk.Label(window, text="Stock:").pack()
+    ttk.Label(window, text="*Stock:").pack()
     product_stock_entry = ttk.Entry(window, width=30)
     product_stock_entry.pack()
 
     button_frame = ttk.Frame(window)
     button_frame.pack(pady=10)
+
+    ttk.Label(
+        window,
+        text="Fields with * are necessary",
+        font=("Arial", 10, "italic"),
+        foreground="red"
+    ).pack(pady=10)
 
     # FIX: Use lambda to prevent immediate execution
     ttk.Button(button_frame, text="Create Product",
@@ -463,11 +471,10 @@ def on_double_click(event, tree, refresh_callback=None):
         }
         open_edit_product(product_data, refresh_callback)
 
-#NEED TO STUDY IT AND LEARN IT
 def open_search_window():
     window = tk.Toplevel(root)
     window.title("Search Products")
-    window.geometry("800x500")
+    window.geometry("800x680")
 
     style = ttk.Style()
     style.configure("Search.TFrame", background="#f0f0f0")
@@ -536,6 +543,9 @@ def open_search_window():
                                 field_search_entry.delete(0, tk.END)],
                width=12).pack(side="left")
 
+    # Back button
+    ttk.Button(action_frame, text="Back", command=window.destroy).pack(side="right")
+
     # --- Results Frame ---
     results_label_frame = ttk.LabelFrame(main_frame, text="Search Results", padding="10")
     results_label_frame.pack(fill="both", expand=True)
@@ -572,7 +582,6 @@ def open_search_window():
                              font=("Arial", 9), foreground="gray")
     status_label.pack(side="left")
 
-    # --- Helper: Populate Tree with Data ---
     def populate_tree(products, search_type=""):
         # Clear old data
         for item in tree.get_children():
@@ -662,7 +671,7 @@ def open_search_window():
 def open_restock_window():
     window = tk.Toplevel(root)
     window.title("Restock Products")
-    window.geometry("600x600")
+    window.geometry("680x600")
 
     products = fetch_products()
     if not products:
@@ -676,18 +685,20 @@ def open_restock_window():
     products_frame.pack()
     ttk.Label(products_frame, text="Available products", font=("Arial", 13, "bold")).pack(pady=10)
 
-    products_tree = EditableTreeview(products_frame, columns=("ID", "Name", "Description", "Price", "Stock"),
+    products_tree = EditableTreeview(products_frame, columns=("ID", "Name", "Description", "Price", "Stock","Additions"),
                                      show="headings", height=20)
     products_tree.heading("ID", text="ID", anchor="center")
     products_tree.heading("Name", text="Product Name", anchor="center")
     products_tree.heading("Description", text="Description", anchor="center")
     products_tree.heading("Price", text="Price", anchor="center")
     products_tree.heading("Stock", text="Stock", anchor="center")
+    products_tree.heading("Additions", text="Additions", anchor="center")
     products_tree.column("ID", width=40, anchor="center")
     products_tree.column("Name", width=140, anchor="center")
     products_tree.column("Description", width=200, anchor="center")
     products_tree.column("Price", width=100, anchor="center")
     products_tree.column("Stock", width=80, anchor="center")
+    products_tree.column("Additions", width=80, anchor="center")
 
     products_tree_scrollbar = ttk.Scrollbar(products_frame, orient="vertical", command=products_tree.yview)
     products_tree.configure(yscrollcommand=products_tree_scrollbar.set)
@@ -707,19 +718,24 @@ def open_restock_window():
             product.get('product_name', 'N/A'),
             product.get('product_description', 'N/A'),
             product.get('product_price', 'N/A'),
-            stock_value
+            stock_value,
+            0
         ), tags=tags)
 
     def on_restock():
         updated_products = []
         for item_id in products_tree.get_children():
             values = products_tree.item(item_id, "values")
+            stock = int(values[4])
+            additions = int(values[5])
+
+            new_stock = stock + additions
             updated_products.append({
                 "product_id": values[0],
                 "product_name": values[1],
                 "product_description": values[2],
                 "product_price": values[3],
-                "product_stock": values[4],
+                "product_stock": new_stock,
             })
         restock_products(updated_products, window)
 
@@ -793,6 +809,8 @@ def open_stats_window():
             if isinstance(value, (int, float)):
                 # Round all numeric values
                 value = round(float(value), 2)
+                if key in ("product_count","average_stock","highest_stock","available_products","out_of_stock_products"):
+                    value = round(int(value), 2)
 
                 # Add euro sign to price-related stats
                 if key in ("average_price", "highest_price", "value_sum"):
@@ -819,7 +837,7 @@ style = ttk.Style()
 style.theme_use("winnative")
 style.configure("TButton", font=("Arial", 12), padding=6)
 
-ttk.Label(root, text="Storage CRUDE App", font=("Arial", 18, "bold")).pack(pady=20)
+ttk.Label(root, text="Storage CRUD App", font=("Arial", 18, "bold")).pack(pady=20)
 ttk.Button(root, text="Create Product", width=25, command=open_create_product).pack(pady=5)
 ttk.Button(root, text="View Products", width=25, command=open_view_products).pack(pady=5)
 ttk.Button(root, text="Search Products", width=25, command=open_search_window).pack(pady=5)
