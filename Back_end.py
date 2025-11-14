@@ -93,12 +93,16 @@ def update_product_in_db(product_id,product: Product):
     conn.commit()
     cursor.close()
 
-def delete_product_in_db(productd_id):
+def delete_product_in_db(product_id):
     conn = get_connection(DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT)
-    conn.cursor().execute("""
-            DELETE FROM products where product_id=%s
-    """, (productd_id))
+    cur = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM products WHERE product_id = %s
+    """, (product_id,))
+
     conn.commit()
+    cur.close()
     conn.close()
 
 def search_all_fields(search_term):
@@ -180,8 +184,6 @@ def stats_calculation_in_db():
     #.... getting info from our database...
     for row in rows:
         product_id = row[0]
-        product_name = row[1]
-        product_description = row[2]
         product_price = row[3]
         product_stock = row[4]
         product_count=product_count+1
